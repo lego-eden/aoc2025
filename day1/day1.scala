@@ -1,27 +1,23 @@
 import scala.math.floorMod
 
-@main def day1 =
-  lazy val wd = os.pwd/"1"
-  lazy val testdata = wd/"test.txt"
-  lazy val datadata = wd/"data.txt"
-  
+object day1 extends Day:
   val dialstart = 50
 
-  def parse(file: os.ReadablePath): Iterator[Int] =
-    os.read.lines(file).init
+  def parse(lines: IndexedSeq[String]): Iterator[Int] =
+    lines.init
       .iterator
       .map:
         case s"R$n" => n.toInt
         case s"L$n" => -n.toInt
 
-  def part1(file: os.ReadablePath) =
-    parse(file)
+  def partOne(lines: IndexedSeq[String]): Long =
+    parse(lines)
       .scanLeft(dialstart): (acc, offset) =>
         floorMod(acc + offset, 100)
       .count(_ == 0)
 
-  def part2(file: os.ReadablePath) =
-    val res = parse(file).foldLeft((dialstart, 0)):
+  def partTwo(lines: IndexedSeq[String]): Long =
+    val res = parse(lines).foldLeft((dialstart, 0)):
       case ((dial, zerocount), offset) =>
         lazy val extraCount = (offset / 100).abs
         val newDial = floorMod(dial + offset, 100)
@@ -31,5 +27,4 @@ import scala.math.floorMod
           (newDial, zerocount + extraCount) 
     res(1)
 
-  println(part2(datadata))
 end day1
