@@ -16,7 +16,7 @@ trait Day:
   lazy val example: IndexedSeq[String] =
     os.read.lines(os.pwd / toString / "example.txt")
 
-  override def toString: String = super.toString.takeWhile(_ != '$')
+  final override def toString: String = super.toString.takeWhile(_ != '$')
 
   def main(args: Array[String]): Unit =
     println(s"partOne: $partOne")
