@@ -8,17 +8,13 @@ object day2 extends Day:
     def isDuplicate: Boolean =
       val nStr = n.toString
       val nd = nStr.length
-      lazy val ndHalf = nd / 2
-      lazy val upperHalf = nStr.take(ndHalf).toInt
-      lazy val lowerHalf = nStr.drop(ndHalf).toInt
 
-      nd % 2 == 0 && upperHalf == lowerHalf
+      nd % 2 == 0 && nStr.take(nd / 2) * 2 == nStr
 
     def isRepeat: Boolean =
       val nStr = n.toString
       val nd = nStr.length
-      lazy val ndHalf = nd / 2
-      (1 to ndHalf)
+      (1 to nd / 2)
         .filter(nd % _ == 0)
         .map(i => nStr.take(i) * (nd / i))
         .exists(_ == nStr)
