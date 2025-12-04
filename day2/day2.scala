@@ -22,8 +22,8 @@ object day2 extends Day:
   def parse(lines: IndexedSeq[String]): Iterator[InclRange[Long]] =
     lines.head.split(',')
       .iterator
-      .map(_.split('-'))
-      .map(a => a(0).toLong to a(1).toLong )
+      .collect:
+        case s"$start-$end" => start.toLong to end.toLong
 
   def partOne(lines: IndexedSeq[String]): Long =
     parse(lines).flatMap(r => r.filter(_.isDuplicate)).sum
