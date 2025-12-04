@@ -2,11 +2,8 @@ object day3 extends Day:
 
   useExample = false
 
-  def solve(lines: IndexedSeq[String], numBatteries: Int): Long =
-    lines.map(bank =>
-      maxJolt(numBatteries):
-        bank.map(_.asDigit.toLong)
-    ).sum
+  def parse(lines: IndexedSeq[String]): IndexedSeq[IndexedSeq[Long]] =
+    lines.map(_.map(_.asDigit.toLong))
 
   extension (xs: Seq[Long])
     def insertMax(n: Long): Seq[Long] = xs match
@@ -20,8 +17,10 @@ object day3 extends Day:
       acc.insertMax(n)
     .reduce(_ * 10 + _)
 
-  def partOne(lines: IndexedSeq[String]): Long = solve(lines, 2)
+  def partOne(lines: IndexedSeq[String]): Long =
+    parse(lines).map(maxJolt(2)).sum
 
-  def partTwo(lines: IndexedSeq[String]): Long = solve(lines, 12)
+  def partTwo(lines: IndexedSeq[String]): Long =
+    parse(lines).map(maxJolt(12)).sum
   
 end day3
