@@ -1,62 +1,71 @@
-import scala.util.boundary
 object day8 extends Day:
   
   useExample = false
   
-  extension (a: Int) inline def *-(b: Int): Int =
+  extension (a: Long) inline def *-(b: Long): Long =
     val diff = a-b
     diff*diff
 
-  case class Junc(x: Int, y: Int, z: Int, id: Int, circuit: Int):
-    infix def sqDist(other: Junc): Int =
-      val Junc(ox, oy, oz, _, _) = other
-      ox *- x + oy *- y + oz *- z
+  class Junc(val x: Long, val y: Long, val z: Long, val id: Int, var circuit: Int):
+    infix def sqDist(other: Junc): Long =
+      other.x *- x + other.y *- y + other.z *- z
+
+    override def toString: String =
+      val pos = (x, y, z)
+      s"$pos, id: $id, circuit: $circuit"
   
-  def parse(lines: IndexedSeq[String]): Vector[Junc] =
+  def parse(lines: IndexedSeq[String]): Array[Junc] =
     lines.zipWithIndex.collect:
       case (s"$x,$y,$z", id) =>
-        Junc(x.toInt, y.toInt, z.toInt, id, id)
-    .toVector
+        Junc(x.toLong, y.toLong, z.toLong, id, id)
+    .toArray
 
-  extension (juncs: Vector[Junc])
+  extension (juncs: Array[Junc])
     def distanceSorted: Vector[(Int, Int)] =
-      (for a <- juncs; b <- juncs if a != b yield (a, b))
-        .sortBy(_ sqDist _).map((a, b) => (a.id, b.id))
+      (for a <- juncs.indices; b <- juncs.indices.drop(a+1) yield (a, b))
+        .toVector
+        .sortBy(juncs(_) sqDist juncs(_))
         
-    def joined(n: Int): Vector[Junc] = boundary:
-      var connections = 0
-      juncs.distanceSorted.foldLeft(juncs){ case (acc, (a, b)) =>
-        if acc(a).circuit != acc(b).circuit then
-          val result = acc.connect(a, b)
-          connections += 1
-          if connections >= n then boundary.break(acc)
-          result
-        else
-          acc
-      }
+    def join(n: Int): Unit =
+      for
+        (a, b) <- juncs.distanceSorted.take(n)
+      do
+        juncs.connect(a, b)
 
-    def connect(a: Int, b: Int): Vector[Junc] =
+    def connect(a: Int, b: Int): Unit =
       val aJunc = juncs(a)
       val bJunc = juncs(b)
+      // println(s"\nConnecting $aJunc with $bJunc")
       val c = aJunc.circuit min bJunc.circuit
-      juncs.map(j =>
-        if j.circuit == aJunc.circuit || j.circuit == bJunc.circuit then
-          j.copy(circuit=c)
-        else
-          j
-      )
+      for
+        j <- juncs.iterator
+        jc = j.circuit
+        if (jc == aJunc.circuit || jc == bJunc.circuit) && jc != c
+      do
+        j.circuit = c
+        // println(s"${juncs(a)} \t<===> ${juncs(b)}")
 
-    def circuits(n: Int): Map[Int, Vector[Junc]] =
-      juncs.joined(n).groupBy(_.circuit)
+    def circuits(n: Int): Map[Int, Array[Junc]] =
+      juncs.join(n)
+      juncs.groupBy(_.circuit)
   end extension
 
   def partOne(lines: IndexedSeq[String]): Long =
     parse(lines).circuits(if useExample then 10 else 1000)
-      // .tapEach((i, circ) => println(circ))
-      .map((_, circuit) => circuit.size)
+      // .tapEach((i, circuit) =>
+      //   println()
+      //   println(circuit.size)
+      //   circuit.foreach(println)
+      // )
       .toVector
-      .sorted
+      .sortBy(_(1).length)
       .reverse
       .take(3)
+      .tapEach((i, circuit) =>
+        println()
+        println(circuit.size)
+        circuit.foreach(println)
+      )
+      .map(_(1).length)
       .product
   def partTwo(lines: IndexedSeq[String]): Long = 0L
