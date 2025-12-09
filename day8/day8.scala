@@ -1,71 +1,91 @@
+import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
+import scala.collection.mutable.Buffer
+import scala.util.boundary
+
 object day8 extends Day:
   
   useExample = false
   
+  type Pos = (x: Long, y: Long, z: Long)
+  type NodeID = Int
+
+  class Node(var parent: NodeID, var size: Int):
+    override def toString: String = s"(parent=$parent, size=$size)"
+
+  def createGraph(lines: IndexedSeq[String], n: Int): Array[Node] =
+    val emptyGraph = Array.tabulate(lines.length)(i => Node(i, 1))
+    val connections = parse(lines).connections.take(n)
+
+    for (a, b) <- connections do
+      emptyGraph.union(a, b)
+
+    emptyGraph
+
+  extension (graph: Array[Node])
+    def find(node: NodeID): NodeID =
+      // find the root parent
+      var p = node
+      while graph(p).parent != p do
+        p = graph(p).parent
+      // replace the old parents with the root
+      var v = node
+      while graph(v).parent != v do
+        val tmp = graph(v).parent
+        graph(v).parent = p
+        v = tmp
+      p
+
+    def union(a: NodeID, b: NodeID) = boundary:
+      val (u, v) = (graph.find(a), graph.find(b))
+      if u == v then boundary.break()
+      val (nu, nv) = (graph(u), graph(v))
+      // println(s"union $a $b")
+      if nu.size < nv.size then
+        nu.parent = v
+        nv.size = nu.size + nv.size
+        // println(s"now parent=$v size=${nv.size}")
+      else
+        nv.parent = u
+        nu.size = nu.size + nv.size
+        // println(s"now parent=$u size=${nu.size}")
+
+
   extension (a: Long) inline def *-(b: Long): Long =
     val diff = a-b
     diff*diff
 
-  class Junc(val x: Long, val y: Long, val z: Long, val id: Int, var circuit: Int):
-    infix def sqDist(other: Junc): Long =
-      other.x *- x + other.y *- y + other.z *- z
+  extension (a: Pos)
+    infix def sqDist(b: Pos): Long =
+      a.x *- b.x + a.y *- b.y + a.z *- b.z
 
-    override def toString: String =
-      val pos = (x, y, z)
-      s"$pos, id: $id, circuit: $circuit"
-  
-  def parse(lines: IndexedSeq[String]): Array[Junc] =
-    lines.zipWithIndex.collect:
-      case (s"$x,$y,$z", id) =>
-        Junc(x.toLong, y.toLong, z.toLong, id, id)
-    .toArray
+  extension (positions: Vector[Pos])
+    def connections: Vector[(NodeID, NodeID)] =
+      val allEdges =
+        for
+          a <- positions.indices
+          b <- positions.indices.drop(a+1)
+        yield
+          (a, b)
+      allEdges.toVector
+        .sortBy((a, b) => positions(a) sqDist positions(b))
+        // .tapEach((a, b) =>
+        //   println(s"${positions(a)} ${positions(b)}")
+        // )
 
-  extension (juncs: Array[Junc])
-    def distanceSorted: Vector[(Int, Int)] =
-      (for a <- juncs.indices; b <- juncs.indices.drop(a+1) yield (a, b))
-        .toVector
-        .sortBy(juncs(_) sqDist juncs(_))
-        
-    def join(n: Int): Unit =
-      for
-        (a, b) <- juncs.distanceSorted.take(n)
-      do
-        juncs.connect(a, b)
-
-    def connect(a: Int, b: Int): Unit =
-      val aJunc = juncs(a)
-      val bJunc = juncs(b)
-      // println(s"\nConnecting $aJunc with $bJunc")
-      val c = aJunc.circuit min bJunc.circuit
-      for
-        j <- juncs.iterator
-        jc = j.circuit
-        if (jc == aJunc.circuit || jc == bJunc.circuit) && jc != c
-      do
-        j.circuit = c
-        // println(s"${juncs(a)} \t<===> ${juncs(b)}")
-
-    def circuits(n: Int): Map[Int, Array[Junc]] =
-      juncs.join(n)
-      juncs.groupBy(_.circuit)
-  end extension
+  def parse(lines: IndexedSeq[String]): Vector[Pos] =
+    lines.collect:
+      case s"$x,$y,$z" =>
+        (x.toLong, y.toLong, z.toLong)
+      case _ => sys.error("unexpected line")
+    .toVector
 
   def partOne(lines: IndexedSeq[String]): Long =
-    parse(lines).circuits(if useExample then 10 else 1000)
-      // .tapEach((i, circuit) =>
-      //   println()
-      //   println(circuit.size)
-      //   circuit.foreach(println)
-      // )
-      .toVector
-      .sortBy(_(1).length)
+    val graph = createGraph(lines, if useExample then 10 else 1000)
+    graph.map(n => n.parent).distinct
+      .map(n => graph(n).size)
+      .sorted
       .reverse
       .take(3)
-      .tapEach((i, circuit) =>
-        println()
-        println(circuit.size)
-        circuit.foreach(println)
-      )
-      .map(_(1).length)
       .product
   def partTwo(lines: IndexedSeq[String]): Long = 0L
