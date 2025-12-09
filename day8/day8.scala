@@ -1,6 +1,3 @@
-import scala.collection.mutable.Map as MutMap
-import scala.collection.mutable.Set as MutSet
-import scala.collection.mutable.Buffer
 import scala.util.boundary
 
 object day8 extends Day:
@@ -22,6 +19,21 @@ object day8 extends Day:
 
     emptyGraph
 
+  def calcWallDist(lines: IndexedSeq[String]): Long =
+    val emptyGraph = Array.tabulate(lines.length)(i => Node(i, 1))
+    val positions = parse(lines)
+    val connections = positions.connections
+    val sortedPositions = connections.map((a, b) => (positions(a), positions(b)))
+    val i = boundary:
+      for ((a, b), i) <- connections.zipWithIndex do
+        emptyGraph.union(a, b)
+        if emptyGraph(emptyGraph.find(a)).size == emptyGraph.length then
+          boundary.break(i)
+      connections.length - 1
+
+    val ((x1,_,_), (x2,_,_)) = sortedPositions(i)
+    x1 * x2
+
   extension (graph: Array[Node])
     def find(node: NodeID): NodeID =
       // find the root parent
@@ -40,16 +52,12 @@ object day8 extends Day:
       val (u, v) = (graph.find(a), graph.find(b))
       if u == v then boundary.break()
       val (nu, nv) = (graph(u), graph(v))
-      // println(s"union $a $b")
       if nu.size < nv.size then
         nu.parent = v
         nv.size = nu.size + nv.size
-        // println(s"now parent=$v size=${nv.size}")
       else
         nv.parent = u
         nu.size = nu.size + nv.size
-        // println(s"now parent=$u size=${nu.size}")
-
 
   extension (a: Long) inline def *-(b: Long): Long =
     val diff = a-b
@@ -60,7 +68,10 @@ object day8 extends Day:
       a.x *- b.x + a.y *- b.y + a.z *- b.z
 
   extension (positions: Vector[Pos])
-    def connections: Vector[(NodeID, NodeID)] =
+    def distanceSort: Vector[(Pos, Pos)] =
+      positions.connections.map((a, b) => (positions(a), positions(b)))
+
+    def allConnections: Vector[(NodeID, NodeID)] =
       val allEdges =
         for
           a <- positions.indices
@@ -68,10 +79,11 @@ object day8 extends Day:
         yield
           (a, b)
       allEdges.toVector
+
+    def connections: Vector[(NodeID, NodeID)] =
+      positions.allConnections
         .sortBy((a, b) => positions(a) sqDist positions(b))
-        // .tapEach((a, b) =>
-        //   println(s"${positions(a)} ${positions(b)}")
-        // )
+  end extension
 
   def parse(lines: IndexedSeq[String]): Vector[Pos] =
     lines.collect:
@@ -88,4 +100,8 @@ object day8 extends Day:
       .reverse
       .take(3)
       .product
-  def partTwo(lines: IndexedSeq[String]): Long = 0L
+
+  def partTwo(lines: IndexedSeq[String]): Long =
+    calcWallDist(lines)
+
+end day8
