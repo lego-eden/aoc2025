@@ -1,5 +1,6 @@
 //> using scala 3.7
 //> using dep com.lihaoyi::os-lib::0.11.6
+//> using dep org.ojalgo:ojalgo:56.1.1
 //> using options -deprecation
 
 trait Day:
