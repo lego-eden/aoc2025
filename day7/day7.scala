@@ -1,4 +1,3 @@
-import scala.annotation.tailrec
 import scala.collection.mutable.HashMap as MutMap
 
 object day7 extends Day:

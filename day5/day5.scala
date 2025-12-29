@@ -1,4 +1,3 @@
-import scala.util.boundary
 object day5 extends Day:
 
   useExample = false

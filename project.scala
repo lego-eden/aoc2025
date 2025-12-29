@@ -1,7 +1,7 @@
 //> using scala 3.7
 //> using dep com.lihaoyi::os-lib::0.11.6
 //> using dep org.ojalgo:ojalgo:56.1.1
-//> using options -deprecation
+//> using options -deprecation -Wall
 
 trait Day:
   var useExample = false
@@ -21,8 +21,8 @@ trait Day:
   final override def toString: String = super.toString.takeWhile(_ != '$')
 
   def main(args: Array[String]): Unit =
-    println(s"partOne: $partOne")
-    println(s"partTwo: $partTwo")
+    println(s"partOne: ${partOne.toString}")
+    println(s"partTwo: ${partTwo.toString}")
 
 end Day
 
