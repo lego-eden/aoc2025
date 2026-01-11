@@ -1,13 +1,13 @@
 //> using scala 3.7
 //> using dep com.lihaoyi::os-lib::0.11.6
-//> using dep org.ojalgo:ojalgo:56.1.1
+//> using dep org.ojalgo:ojalgo:56.2.0
 //> using options -deprecation -Wall
 
 trait Day:
   var useExample = false
 
-  def partOne: Long | BigInt = partOne(if useExample then example else input)
-  def partTwo: Long | BigInt = partTwo(if useExample then example else input)
+  def partOne: Long | BigInt = partOne(if useExample then example1 else input)
+  def partTwo: Long | BigInt = partTwo(if useExample then example2 else input)
 
   def partOne(lines: IndexedSeq[String]): Long | BigInt
   def partTwo(lines: IndexedSeq[String]): Long | BigInt
@@ -15,8 +15,15 @@ trait Day:
   lazy val input: IndexedSeq[String] =
     os.read.lines(os.pwd / toString / "input.txt")
 
-  lazy val example: IndexedSeq[String] =
-    os.read.lines(os.pwd / toString / "example.txt")
+  lazy val example: os.ReadablePath =
+    os.pwd / toString / "example.txt"
+
+  lazy val example1 =
+    val p = os.pwd / toString / "example1.txt"
+    os.read.lines(if os.exists(p) then p else example)
+  lazy val example2 =
+    val p = os.pwd / toString / "example2.txt"
+    os.read.lines(if os.exists(p) then p else example)
 
   final override def toString: String = super.toString.takeWhile(_ != '$')
 

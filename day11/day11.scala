@@ -1,37 +1,45 @@
-import scala.collection.immutable.{HashSet, HashMap}
+import scala.collection.immutable.HashMap
+import scala.collection.mutable.HashMap as MutMap
 
 object day11 extends Day:
 
+  useExample = false
+
   case class Node(id: String, neighbors: Vector[String])
   type Graph = HashMap[String, Node]
-  type Path = Vector[String]
 
   extension (g: Graph)
-    def dfs(
-        currentNode: String,
-        targetNode: String,
-        currentPath: Path,
-        visited: HashSet[String]
-    ): Vector[Path] =
-      if currentNode == targetNode then
-        Vector(currentPath :+ currentNode)
-      else
-        g(currentNode).neighbors.flatMap(n =>
-          dfs(n, targetNode, currentPath :+ n, visited + n)
-        )
+    def pathsBetween(from: String, to: String): BigInt =
+      val cache = MutMap.empty[String, BigInt]
 
-    def allPaths: Vector[Path] =
-      dfs("you", "out", Vector.empty, HashSet.empty)
+      def pathsBetweenRec(from: String): BigInt =
+        def pathsBetweenImpl(from: String): BigInt =
+          if from == to then 1
+          else
+            g(from).neighbors.map(id => pathsBetweenRec(id)).sum
+        cache.getOrElseUpdate(from, pathsBetweenImpl(from))
+
+      pathsBetweenRec(from)
+    end pathsBetween
+
+    def pathsThrough(start: String, through: String, throughRest: String*): BigInt =
+      (start +: through +: throughRest).sliding(2)
+        .map(pair => pathsBetween(pair(0), pair(1)))
+        .reduce(_ * _)
 
   def parse(lines: IndexedSeq[String]): Graph =
     lines.map:
       case s"$id: $neighborStrings" =>
         val neighbors = neighborStrings.split(' ').toVector
         id -> Node(id, neighbors)
-    .to(HashMap)
+    .to(HashMap) + ("out" -> Node("out", Vector.empty))
 
-  def partOne(lines: IndexedSeq[String]): Long =
-    parse(lines).allPaths.length
-  def partTwo(lines: IndexedSeq[String]): Long = 0
+  def partOne(lines: IndexedSeq[String]): BigInt =
+    parse(lines).pathsBetween("you", "out")
+
+  def partTwo(lines: IndexedSeq[String]): BigInt =
+    val graph = parse(lines)
+    graph.pathsThrough("svr", "fft", "dac", "out")
+    + graph.pathsThrough("svr", "dac", "fft", "out")
 
 end day11
