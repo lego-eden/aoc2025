@@ -3,8 +3,18 @@
 //> using dep org.ojalgo:ojalgo:56.2.0
 //> using options -deprecation -Wall
 
+import java.nio.file.NoSuchFileException
+
 trait Day:
   var useExample = false
+
+  def readLines(path: os.ReadablePath): IndexedSeq[String] =
+    try
+      os.read.lines(path)
+    catch
+      case _: NoSuchFileException =>
+        println(s"${path.toString} does not exist")
+        sys.exit(-1)
 
   def partOne: Long | BigInt = partOne(if useExample then example1 else input)
   def partTwo: Long | BigInt = partTwo(if useExample then example2 else input)
@@ -13,17 +23,17 @@ trait Day:
   def partTwo(lines: IndexedSeq[String]): Long | BigInt
 
   lazy val input: IndexedSeq[String] =
-    os.read.lines(os.pwd / toString / "input.txt")
+    readLines(os.pwd / toString / "input.txt")
 
   lazy val example: os.ReadablePath =
     os.pwd / toString / "example.txt"
 
   lazy val example1 =
     val p = os.pwd / toString / "example1.txt"
-    os.read.lines(if os.exists(p) then p else example)
+    readLines(if os.exists(p) then p else example)
   lazy val example2 =
     val p = os.pwd / toString / "example2.txt"
-    os.read.lines(if os.exists(p) then p else example)
+    readLines(if os.exists(p) then p else example)
 
   final override def toString: String = super.toString.takeWhile(_ != '$')
 
